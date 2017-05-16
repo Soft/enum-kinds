@@ -36,6 +36,12 @@ The `#[derive(EnumKind)]` attribute automatically generates another `enum` named
 Additionally, `SomeEnum` implements `ToKind` trait that provides the `kind`
 method for constructing matching values from `SomeEnumKind`.
 
+# Issues
+
+While the crate is fairly simple, issues are still possible. If you encounter
+any problems using these crates, please report them
+at [the issue tracker](https://bitbucket.org/Soft/enum-kinds/issues).
+
 # License
 
 The crates are available under the terms of [MIT license](https://opensource.org/licenses/MIT).
