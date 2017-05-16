@@ -6,6 +6,6 @@ homepage = "https://bitbucket.org/Soft/enum-kinds"
 repository = "https://bitbucket.org/Soft/enum-kinds"
 description = "Traits for enum-kinds-macros crate."
 license = "MIT"
-keywords = ["macro", "enum"]
+keywords = ["macro", "enum", "deriving"]
 
 [dependencies]

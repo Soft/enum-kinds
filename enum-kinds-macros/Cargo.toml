@@ -7,7 +7,7 @@ repository = "https://bitbucket.org/Soft/enum-kinds"
 description = "Macros for deriving enums that represent enum variants."
 readme = "README.md"
 license = "MIT"
-keywords = ["macro", "enum"]
+keywords = ["macro", "enum", "derive"]
 
 [lib]
 proc-macro = true
@@ -17,4 +17,4 @@ syn = "0.11"
 quote = "0.3"
 
 [dev-dependencies]
-enum-kinds-traits = { path = "../enum-kinds-traits" }
+enum-kinds-traits = { path = "../enum-kinds-traits", version = "0.1.0" }
