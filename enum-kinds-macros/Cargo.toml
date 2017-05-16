@@ -2,9 +2,12 @@
 name = "enum-kinds-macros"
 version = "0.1.0"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
-homepage = "https://bitbucket.org/Soft/enum-kinds/src"
+homepage = "https://bitbucket.org/Soft/enum-kinds"
+repository = "https://bitbucket.org/Soft/enum-kinds"
 description = "Macros for deriving enums that represent enum variants."
+readme = "README.md"
 license = "MIT"
+keywords = ["macro", "enum"]
 
 [lib]
 proc-macro = true

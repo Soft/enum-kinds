@@ -5,6 +5,9 @@ variants in Rust. `enum-kinds-macros` enables automatic generation of `enum`s
 that represent different `enum` variants. `enum-kinds-traits` contains trait
 definitions used by this macro.
 
+In other words, `enum-kinds` derives `enums` with matching variants, but without
+any of the associated data.
+
 The crates are compatible with stable Rust releases.
 
 # Example
@@ -38,7 +41,7 @@ method for constructing matching values from `SomeEnumKind`.
 
 # Issues
 
-While the crate is fairly simple, issues are still possible. If you encounter
+While the crates are fairly simple, issues are still possible. If you encounter
 any problems using these crates, please report them
 at [the issue tracker](https://bitbucket.org/Soft/enum-kinds/issues).
 
