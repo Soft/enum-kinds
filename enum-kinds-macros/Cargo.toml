@@ -2,6 +2,7 @@
 name = "enum-kinds-macros"
 version = "0.1.0"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
+homepage = "https://bitbucket.org/Soft/enum-kinds/src"
 description = "Macros for deriving enums that represent enum variants."
 license = "MIT"
 

@@ -2,7 +2,8 @@
 name = "enum-kinds-traits"
 version = "0.1.0"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
-description = "Traits for enum-kinds crate."
+homepage = "https://bitbucket.org/Soft/enum-kinds"
+description = "Traits for enum-kinds-macros crate."
 license = "MIT"
 
 [dependencies]
