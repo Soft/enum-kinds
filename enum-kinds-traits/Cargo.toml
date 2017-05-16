@@ -1,0 +1,8 @@
+[package]
+name = "enum-kinds-traits"
+version = "0.1.0"
+authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
+description = "Traits for enum-kinds crate."
+license = "MIT"
+
+[dependencies]
