@@ -1,13 +1,13 @@
 [package]
 name = "enum-kinds-macros"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
 homepage = "https://bitbucket.org/Soft/enum-kinds"
 repository = "https://bitbucket.org/Soft/enum-kinds"
-description = "Macros for deriving enums that represent enum variants."
+description = "Generate enums with matching variants, but without any of the associated data. enum-kinds-traits crate contains trait definitions used by this crate."
 readme = "README.md"
 license = "MIT"
-keywords = ["macro", "enum", "derive"]
+keywords = ["macro", "enum", "derive", "proc-macro", "deriving"]
 
 [lib]
 proc-macro = true

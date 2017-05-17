@@ -1,21 +1,61 @@
-extern crate proc_macro;
-extern crate syn;
+//! Generate enums with matching variants, but without any of the associated data.
+//! `enum-kinds-traits` crate contains trait definitions used by this crate.
+//! 
+//! In other words, `enum-kinds-macros` automatically generates `enum`s that have
+//! the same set of variants as the original `enum`, but with all the embedded data
+//! stripped away (that is, all the variants are unit variants). Additionally,
+//! `enum-kinds-macros` implements `ToKind` trait for the original `enum` allowing
+//! one to get the associated unit variant.
+//! 
+//! The crates are compatible with stable Rust releases.
+//! 
+//! # Example
+//! 
+//! ```rust,ignore
+//! #[macro_use]
+//! extern crate enum_kinds_macros;
+//! extern crate enum_kinds_traits;
+//! 
+//! use enum_kinds_traits::ToKind;
+//! 
+//! #[derive(EnumKind)]
+//! #[enum_kind_name(SomeEnumKind)]
+//! enum SomeEnum {
+//!     First(String, u32),
+//!     Second(char),
+//!     Third
+//! }
+//! 
+//! #[test]
+//! fn test_enum_kind() {
+//!     let first = SomeEnum::First("Example".to_owned(), 32);
+//!     assert_eq!(first.kind(), SomeEnumKind::First);
+//! }
+//! ```
+//! 
+//! The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
+//! `SomeEnumKind` that contains matching unit variants for each of the variants in
+//! `SomeEnum`. Additionally, `SomeEnum` implements `ToKind` trait that provides the
+//! `kind` method for constructing matching values from `SomeEnumKind`.
+//!
 
 #[macro_use]
 extern crate quote;
 
+extern crate proc_macro;
+extern crate syn;
+
 use proc_macro::TokenStream;
 use quote::Tokens;
-use syn::MacroInput;
-
-const NAME_ATTRIBUTE: &str = "enum_kind_name";
+use syn::{MacroInput, MetaItem, NestedMetaItem,
+          Ident, Body, VariantData};
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind_name))]
 pub fn enum_kind(input: TokenStream) -> TokenStream {
     let string = input.to_string();
     let ast = syn::parse_macro_input(&string).unwrap();
     let name = get_enum_name(&ast)
-        .expect(&format!("#[derive(EnumKind)] requires associated #[{}(NAME)] to be specified", NAME_ATTRIBUTE));
+        .expect("#[derive(EnumKind)] requires associated #[enum_kind_name(NAME)] to be specified");
     let enum_ = create_kind_enum(&ast, &name);
     let impl_ = create_impl(&ast, &name);
     let code = quote! {
@@ -25,35 +65,30 @@ pub fn enum_kind(input: TokenStream) -> TokenStream {
     code.parse().unwrap()
 }
 
-fn get_enum_name(definition: &MacroInput) -> Option<syn::Ident> {
+fn get_enum_name(definition: &MacroInput) -> Option<Ident> {
     definition.attrs.iter().find(|attr| {
         match attr.value {
-            syn::MetaItem::List(ref ident, _) if ident == NAME_ATTRIBUTE => true,
+            MetaItem::List(ref ident, _) if ident == "enum_kind_name" => true,
             _ => false
         }})
         .map(|attr| attr.value.clone())
         .map(|item| {
-            match item {
-                syn::MetaItem::List(_, vec) => {
-                    if vec.len() != 1 {
-                        panic!("#[{}(NAME)] requires exactly one argument", NAME_ATTRIBUTE);
-                    }
-                    let item = vec.first().unwrap();
-                    if let &syn::NestedMetaItem::MetaItem(syn::MetaItem::Word(ref ident)) = item {
-                        ident.clone()
-                    } else {
-                        panic!("#[{}(NAME)] requires identifier", NAME_ATTRIBUTE);
-                    }
+            if let MetaItem::List(_, vec) = item {
+                if vec.len() != 1 {
+                    panic!("#[enum_kind_name(NAME)] requires exactly one argument");
                 }
-                _ => {
-                    panic!("#[{}(NAME)] requires identifier", NAME_ATTRIBUTE);
+                let item = vec.first().unwrap();
+                if let &NestedMetaItem::MetaItem(MetaItem::Word(ref ident)) = item {
+                    return ident.clone()
                 }
-            }})
+            }
+            panic!("#[enum_kind_name(NAME)] requires an identifier");
+        })
 }
 
-fn create_kind_enum(definition: &MacroInput, kind_ident: &syn::Ident) -> Tokens {
+fn create_kind_enum(definition: &MacroInput, kind_ident: &Ident) -> Tokens {
     let variant_idents = match &definition.body {
-        &syn::Body::Enum(ref variants) => {
+        &Body::Enum(ref variants) => {
             variants.iter().map(|ref v| v.ident.clone())
         }
         _ => {
@@ -71,22 +106,22 @@ fn create_kind_enum(definition: &MacroInput, kind_ident: &syn::Ident) -> Tokens 
     }
 }
 
-fn create_impl(definition: &MacroInput, kind_ident: &syn::Ident) -> Tokens {
+fn create_impl(definition: &MacroInput, kind_ident: &Ident) -> Tokens {
     let (impl_generics, ty_generics, where_clause) = definition.generics.split_for_impl();
     let ident = &definition.ident;
 
     let arms = match &definition.body {
-        &syn::Body::Enum(ref variants) => {
+        &Body::Enum(ref variants) => {
             variants.iter().map(|ref v| {
                 let variant = &v.ident;
                 match v.data {
-                    syn::VariantData::Unit => quote! {
+                    VariantData::Unit => quote! {
                         &#ident::#variant => #kind_ident::#variant,
                     },
-                    syn::VariantData::Tuple(_) => quote! {
+                    VariantData::Tuple(_) => quote! {
                         &#ident::#variant(..) => #kind_ident::#variant,
                     },
-                    syn::VariantData::Struct(_) => quote! {
+                    VariantData::Struct(_) => quote! {
                         &#ident::#variant{..} => #kind_ident::#variant,
                     }
                 }
@@ -104,6 +139,7 @@ fn create_impl(definition: &MacroInput, kind_ident: &syn::Ident) -> Tokens {
             for #ident #ty_generics #where_clause {
                 type Kind = #kind_ident;
                 
+                #[inline]
                 fn kind(&self) -> Self::Kind {
                     match self {
                         #(#arms)*

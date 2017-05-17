@@ -1,12 +1,11 @@
 # enum-kinds-macros
 
-`enum-kinds-macros` derives `enum`s with matching variants, but without any of
-the associated data. `enum-kinds-traits` contains trait definitions used by this
-macro.
+Generate enums with matching variants, but without any of the associated data.
+`enum-kinds-traits` crate contains trait definitions used by this crate.
 
 In other words, `enum-kinds-macros` automatically generates `enum`s that have
-the same set of variants as the original `enum` but with all embedded data
-removed (that is, all the variants are unit variants). Additionally,
+the same set of variants as the original `enum`, but with all the embedded data
+stripped away (that is, all the variants are unit variants). Additionally,
 `enum-kinds-macros` implements `ToKind` trait for the original `enum` allowing
 one to get the associated unit variant.
 
@@ -36,7 +35,7 @@ fn test_enum_kind() {
 }
 ```
 
-The `#[derive(EnumKind)]` attribute automatically generates another `enum` named
+The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 `SomeEnumKind` that contains matching unit variants for each of the variants in
 `SomeEnum`. Additionally, `SomeEnum` implements `ToKind` trait that provides the
 `kind` method for constructing matching values from `SomeEnumKind`.
