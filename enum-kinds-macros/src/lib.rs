@@ -34,7 +34,7 @@
 //! ```
 //! 
 //! The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
-//! `SomeEnumKind` that contains matching unit variants for each of the variants in
+//! `SomeEnumKind` that contains matching unit variant for each of the variants in
 //! `SomeEnum`. Additionally, `SomeEnum` implements `ToKind` trait that provides the
 //! `kind` method for constructing matching values from `SomeEnumKind`.
 //!

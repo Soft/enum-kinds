@@ -1,0 +1,7 @@
+image: scorpil/rust:stable
+
+pipelines:
+  default:
+    - step:
+        script:
+          - echo "Running Tests"; cargo test --all
