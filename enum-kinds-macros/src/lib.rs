@@ -132,14 +132,14 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
         #[allow(unused_attributes)]
         impl #impl_generics ::enum_kinds_traits::ToKind
             for #ident #ty_generics #where_clause {
-                type Kind = #kind_ident;
-                
-                #[inline]
-                fn kind(&self) -> Self::Kind {
-                    match self {
-                        #(#arms)*
-                    }
+            type Kind = #kind_ident;
+
+            #[inline]
+            fn kind(&self) -> Self::Kind {
+                match self {
+                    #(#arms)*
                 }
+            }
         }
     }
 }

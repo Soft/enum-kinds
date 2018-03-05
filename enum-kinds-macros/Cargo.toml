@@ -17,4 +17,4 @@ syn = "0.12.13"
 quote = "0.4.2"
 
 [dev-dependencies]
-enum-kinds-traits = { path = "../enum-kinds-traits", version = "0.2.0" }
+enum-kinds-traits = { path = "../enum-kinds-traits", version = "0.1.1" }
