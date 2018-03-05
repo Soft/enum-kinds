@@ -1,6 +1,6 @@
 [package]
 name = "enum-kinds-macros"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
 homepage = "https://bitbucket.org/Soft/enum-kinds"
 repository = "https://bitbucket.org/Soft/enum-kinds"
@@ -13,8 +13,8 @@ keywords = ["macro", "enum", "derive", "proc-macro", "deriving"]
 proc-macro = true
 
 [dependencies]
-syn = "0.11"
-quote = "0.3"
+syn = "0.12.13"
+quote = "0.4.2"
 
 [dev-dependencies]
-enum-kinds-traits = { path = "../enum-kinds-traits", version = "0.1.0" }
+enum-kinds-traits = { path = "../enum-kinds-traits", version = "0.2.0" }

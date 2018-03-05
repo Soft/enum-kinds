@@ -1,6 +1,6 @@
 [package]
 name = "enum-kinds-traits"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
 homepage = "https://bitbucket.org/Soft/enum-kinds"
 repository = "https://bitbucket.org/Soft/enum-kinds"

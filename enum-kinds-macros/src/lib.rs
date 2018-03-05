@@ -39,60 +39,55 @@
 //! `kind` method for constructing matching values from `SomeEnumKind`.
 //!
 
+#![no_std]
+
 #[macro_use]
 extern crate quote;
-
 extern crate proc_macro;
 extern crate syn;
 
 use proc_macro::TokenStream;
 use quote::Tokens;
-use syn::{MacroInput, MetaItem, NestedMetaItem,
-          Ident, Body, VariantData};
+use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum, Fields};
+use syn::punctuated::Pair;
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind_name))]
 pub fn enum_kind(input: TokenStream) -> TokenStream {
-    let string = input.to_string();
-    let ast = syn::parse_macro_input(&string).unwrap();
+    let ast = syn::parse(input).expect("#[derive(EnumKind)] failed to parse input");
     let name = get_enum_name(&ast)
-        .expect("#[derive(EnumKind)] requires associated #[enum_kind_name(NAME)] to be specified");
+        .expect("#[derive(EnumKind)] requires an associated #[enum_kind_name(NAME)] to be specified");
     let enum_ = create_kind_enum(&ast, &name);
     let impl_ = create_impl(&ast, &name);
     let code = quote! {
         #enum_
         #impl_
     };
-    code.parse().unwrap()
+    code.into()
 }
 
-fn get_enum_name(definition: &MacroInput) -> Option<Ident> {
-    definition.attrs.iter().find(|attr| {
-        match attr.value {
-            MetaItem::List(ref ident, _) if ident == "enum_kind_name" => true,
-            _ => false
-        }})
-        .map(|attr| attr.value.clone())
-        .map(|item| {
-            if let MetaItem::List(_, vec) = item {
-                if vec.len() != 1 {
-                    panic!("#[enum_kind_name(NAME)] requires exactly one argument");
+fn get_enum_name(definition: &DeriveInput) -> Option<Ident> {
+    for attr in definition.attrs.iter() {
+        match attr.interpret_meta() {
+            Some(Meta::List(MetaList { ident, ref nested, .. })) if ident == "enum_kind_name" => {
+                if let Some(Pair::End(&NestedMeta::Meta(Meta::Word(ident)))) = nested.pairs().next() {
+                    return Some(ident.clone());
+                } else {
+                    panic!("#[enum_kind_name(NAME)] requires an identifier NAME to be specified");
                 }
-                let item = vec.first().unwrap();
-                if let &NestedMetaItem::MetaItem(MetaItem::Word(ref ident)) = item {
-                    return ident.clone()
-                }
-            }
-            panic!("#[enum_kind_name(NAME)] requires an identifier");
-        })
+            },
+            _ => continue
+        }
+    }
+    return None;
 }
 
-fn create_kind_enum(definition: &MacroInput, kind_ident: &Ident) -> Tokens {
-    let variant_idents = match &definition.body {
-        &Body::Enum(ref variants) => {
+fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
+    let variant_idents = match &definition.data {
+        &Data::Enum(DataEnum { ref variants, .. }) => {
             variants.iter().map(|ref v| v.ident.clone())
         }
         _ => {
-            panic!("#[derive(EnumKind)] is only defined for enums, not for structs");
+            panic!("#[derive(EnumKind)] is only allowed for enums");
         }
     };
     let visibility = &definition.vis;
@@ -106,29 +101,29 @@ fn create_kind_enum(definition: &MacroInput, kind_ident: &Ident) -> Tokens {
     }
 }
 
-fn create_impl(definition: &MacroInput, kind_ident: &Ident) -> Tokens {
+fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
     let (impl_generics, ty_generics, where_clause) = definition.generics.split_for_impl();
     let ident = &definition.ident;
 
-    let arms = match &definition.body {
-        &Body::Enum(ref variants) => {
+    let arms = match &definition.data {
+        &Data::Enum(DataEnum { ref variants, .. }) => {
             variants.iter().map(|ref v| {
                 let variant = &v.ident;
-                match v.data {
-                    VariantData::Unit => quote! {
+                match v.fields {
+                    Fields::Unit => quote! {
                         &#ident::#variant => #kind_ident::#variant,
                     },
-                    VariantData::Tuple(_) => quote! {
+                    Fields::Unnamed(_) => quote! {
                         &#ident::#variant(..) => #kind_ident::#variant,
                     },
-                    VariantData::Struct(_) => quote! {
+                    Fields::Named(_) => quote! {
                         &#ident::#variant{..} => #kind_ident::#variant,
                     }
                 }
             })
         }
         _ => {
-            panic!("#[derive(EnumKind)] is only defined for enums, not for structs");
+            panic!("#[derive(EnumKind)] is only defined for enums");
         }
     };
 
