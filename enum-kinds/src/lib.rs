@@ -37,8 +37,6 @@
 //! `kind` method for constructing matching values from `SomeEnumKind`.
 //!
 
-#![cfg_attr(feature="no-stdlib", no_std)]
-
 #[macro_use]
 extern crate quote;
 extern crate proc_macro;
@@ -47,8 +45,10 @@ extern crate syn;
 
 use proc_macro::TokenStream;
 use quote::Tokens;
-use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum, Fields, Path, LifetimeDef, GenericParam};
+use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum,
+          Fields, Path, LifetimeDef, GenericParam, Lifetime};
 use syn::punctuated::Pair;
+use std::collections::HashSet;
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind_name))]
 pub fn enum_kind(input: TokenStream) -> TokenStream {
@@ -132,8 +132,20 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
         parse_quote!(::std::convert::From)
     };
 
-    // Probabilistic macro hygiene
-    let a: LifetimeDef = parse_quote!('__enum_kinds_lifetime_lets_hope_there_is_no_conflict);
+    let mut counter: u32 = 1;
+    let used: HashSet<Lifetime> = definition.generics
+        .lifetimes()
+        .map(|ld| ld.lifetime.clone())
+        .collect();
+    let a = loop {
+        let lifetime: Lifetime = syn::parse_str(&format!("'__enum_kinds{}", counter))
+            .unwrap();
+        if !used.contains(&lifetime) {
+            break LifetimeDef::new(lifetime);
+        }
+        counter += 1;
+    };
+
     let mut generics = definition.generics.clone();
     generics.params.insert(0, GenericParam::Lifetime(a.clone()));
     let (impl_generics, _, _) = generics.split_for_impl();

@@ -39,6 +39,13 @@ enum WithWhereClause<'b, T> where T: Debug, T: 'b, T: ?Sized {
     First { value: &'b T }
 }
 
+#[derive(EnumKind)]
+#[enum_kind_name(WithCollisionKind)]
+#[allow(dead_code)]
+enum WithCollision<'__enum_kinds1> {
+    First(&'__enum_kinds1 str)
+}
+
 #[test]
 fn test_unnamed() {
     let first = UnnamedEnum::First("Example".to_owned(), 32);
@@ -68,5 +75,9 @@ fn test_with_where_clause() {
     assert_eq!(WithWhereClauseKind::from(&first), WithWhereClauseKind::First);
 }
 
-
+#[test]
+fn test_with_collision() {
+    let first = WithCollision::First("hello");
+    assert_eq!(WithCollisionKind::from(&first), WithCollisionKind::First);
+}
 
