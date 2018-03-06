@@ -100,6 +100,13 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
     }
 }
 
+fn is_uninhabited_enum(definition: &DeriveInput) -> bool {
+    if let Data::Enum(ref data) = definition.data {
+        return data.variants.len() == 0;
+    }
+    return false;
+}
+
 fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
     let (_, ty_generics, where_clause) = definition.generics.split_for_impl();
     let ident = &definition.ident;
@@ -150,14 +157,24 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
     generics.params.insert(0, GenericParam::Lifetime(a.clone()));
     let (impl_generics, _, _) = generics.split_for_impl();
 
+    let impl_ = if is_uninhabited_enum(definition) {
+        quote! {
+            unreachable!();
+        }
+    } else {
+        quote!{
+            match _value {
+                #(#arms)*
+            }
+        }
+    };
+
     quote! {
         #[automatically_derived]
         #[allow(unused_attributes)]
         impl #impl_generics #trait_<&#a #ident#ty_generics> for #kind_ident #where_clause {
-            fn from(value: &#a #ident#ty_generics) -> Self {
-                match value {
-                    #(#arms)*
-                }
+            fn from(_value: &#a #ident#ty_generics) -> Self {
+                #impl_
             }
         }
 
@@ -170,3 +187,4 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
         }
     }
 }
+

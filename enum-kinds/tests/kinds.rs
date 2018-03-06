@@ -46,6 +46,11 @@ enum WithCollision<'__enum_kinds1> {
     First(&'__enum_kinds1 str)
 }
 
+#[derive(EnumKind)]
+#[enum_kind_name(UninhabitedEnumKind)]
+#[allow(dead_code)]
+enum UninhabitedEnum {}
+
 #[test]
 fn test_unnamed() {
     let first = UnnamedEnum::First("Example".to_owned(), 32);
