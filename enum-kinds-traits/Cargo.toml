@@ -1,11 +1,14 @@
 [package]
 name = "enum-kinds-traits"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
 homepage = "https://bitbucket.org/Soft/enum-kinds"
 repository = "https://bitbucket.org/Soft/enum-kinds"
-description = "Traits for enum-kinds-macros crate."
+description = "Deprecated in favor of the enum-kinds crate. Traits for enum-kinds-macros crate."
 license = "MIT"
 keywords = ["macro", "enum", "deriving"]
 
 [dependencies]
+
+[badges]
+maintenance = { status = "deprecated" }

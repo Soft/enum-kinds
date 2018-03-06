@@ -4,6 +4,10 @@
 [![Latest Version](https://img.shields.io/crates/v/enum-kinds-macros.svg)](https://crates.io/crates/enum-kinds-macros)
 [![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/enum-kinds-macros)
 
+**DEPRECATED**: This crate along with `enum-kinds-traits` have been replaced
+with `enum-kinds` crate. Users are asked to migrate to the new crate as further
+development will take place there.
+
 Generate enums with matching variants, but without any of the associated data.
 `enum-kinds-traits` crate contains trait definitions used by this crate.
 
