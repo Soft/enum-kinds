@@ -1,14 +1,14 @@
 //! Custom derive for generating enums with matching variants but without any of
 //! the data.
 //! 
-//! In other words, `enum-kinds` automatically generates `enum`s that have the
-//! same set of variants as the original `enum`, but with all the embedded data
+//! In other words, `enum-kinds` automatically generates enums that have the
+//! same set of variants as the original enum, but with all the embedded data
 //! stripped away (that is, all the variants of the newly generated enum are
 //! unit variants). Additionally, `enum-kinds` implements `From` trait for going
-//! form the original enum to the unit variant version.
+//! from the original enum to the unit variant version.
 //! 
 //! The crate is compatible with stable Rust releases. This crate replaces
-//! earlier enum_kinds_macros and enum_kinds_traits crates.
+//! earlier `enum_kinds_macros` and `enum_kinds_traits` crates.
 //! 
 //! # Example
 //! 
@@ -33,8 +33,7 @@
 //! 
 //! The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 //! `SomeEnumKind` that contains matching unit variant for each of the variants in
-//! `SomeEnum`. Additionally, `SomeEnum` implements `ToKind` trait that provides the
-//! `kind` method for constructing matching values from `SomeEnumKind`.
+//! `SomeEnum`.
 //!
 
 #[macro_use]
