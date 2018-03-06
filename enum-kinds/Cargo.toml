@@ -1,0 +1,21 @@
+[package]
+name = "enum-kinds"
+version = "0.3.0"
+authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
+homepage = "https://bitbucket.org/Soft/enum-kinds"
+repository = "https://bitbucket.org/Soft/enum-kinds"
+description = "Generate enums with matching variants but without any of the associated data."
+readme = "README.md"
+license = "MIT"
+keywords = ["macro", "enum", "derive", "proc-macro", "deriving"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.12.13"
+quote = "0.4.2"
+
+[features]
+default = []
+no-stdlib = []

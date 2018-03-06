@@ -1,1 +1,1 @@
-enum-kinds-macros/README.md
+enum-kinds/README.md

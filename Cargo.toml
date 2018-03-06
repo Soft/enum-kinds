@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "enum-kinds-macros",
-  "enum-kinds-traits"
+  "enum-kinds-traits",
+  "enum-kinds"
 ]
 
