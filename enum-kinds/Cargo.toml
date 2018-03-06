@@ -19,3 +19,6 @@ quote = "0.4.2"
 [features]
 default = []
 no-stdlib = []
+
+[badges]
+travis-ci = { repository = "Soft/enum-kinds" }
