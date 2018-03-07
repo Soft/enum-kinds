@@ -41,7 +41,31 @@ The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 `SomeEnumKind` that contains matching unit variant for each of the variants in
 `SomeEnum`.
 
+# Additional traits for kind enums
 
+By default, derived kind enums implement `Debug`, `Clone`, `Copy`, `PartialEq`
+and `Eq` traits. Additional derives can be specified using the
+`#[enum_kind_derive(TRAIT, ...)]` attribute. For example, to implement Serde's
+Serialize and Deserialize traits:
+
+``` rust
+#[macro_use]
+extern crate enum_kinds;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+
+#[derive(EnumKind)]
+#[enum_kind_name(AdditionalDerivesKind)]
+#[enum_kind_derive(Serialize, Deserialize)]
+enum AdditionalDerives {
+    Variant(String, u32),
+    Another(String)
+}
+```
+
+rust
 
 # no_std support
 
