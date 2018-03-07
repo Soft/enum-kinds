@@ -3,6 +3,11 @@ extern crate enum_kinds;
 
 use std::fmt::Debug;
 
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
+
 #[derive(EnumKind)]
 #[enum_kind_name(UnnamedEnumKind)]
 #[allow(dead_code)]
@@ -51,6 +56,15 @@ enum WithCollision<'__enum_kinds1> {
 #[allow(dead_code)]
 enum UninhabitedEnum {}
 
+#[derive(EnumKind)]
+#[enum_kind_name(WithExtraTraitsKind)]
+#[enum_kind_derive(Serialize, Deserialize)]
+#[allow(dead_code)]
+enum WithExtraTraits {
+    First(u32, u32),
+    Second(String)
+}
+
 #[test]
 fn test_unnamed() {
     let first = UnnamedEnum::First("Example".to_owned(), 32);
@@ -85,4 +99,12 @@ fn test_with_collision() {
     let first = WithCollision::First("hello");
     assert_eq!(WithCollisionKind::from(&first), WithCollisionKind::First);
 }
+
+#[test]
+fn test_with_extra_traits() {
+    let first = WithExtraTraits::First(20, 30);
+    let kind: WithExtraTraitsKind = first.into();
+    serde_json::to_string(&kind).unwrap();
+}
+
 

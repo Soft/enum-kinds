@@ -46,15 +46,17 @@ use proc_macro::TokenStream;
 use quote::Tokens;
 use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum,
           Fields, Path, LifetimeDef, GenericParam, Lifetime};
-use syn::punctuated::Pair;
+use syn::punctuated::{Punctuated, Pair};
 use std::collections::HashSet;
+use std::iter::FromIterator;
 
-#[proc_macro_derive(EnumKind, attributes(enum_kind_name))]
+#[proc_macro_derive(EnumKind, attributes(enum_kind_name, enum_kind_derive))]
 pub fn enum_kind(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("#[derive(EnumKind)] failed to parse input");
     let name = get_enum_name(&ast)
         .expect("#[derive(EnumKind)] requires an associated #[enum_kind_name(NAME)] to be specified");
-    let enum_ = create_kind_enum(&ast, &name);
+    let derives = get_derives(&ast);
+    let enum_ = create_kind_enum(&ast, &name, derives);
     let impl_ = create_impl(&ast, &name);
     let code = quote! {
         #enum_
@@ -79,7 +81,30 @@ fn get_enum_name(definition: &DeriveInput) -> Option<Ident> {
     return None;
 }
 
-fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
+fn get_derives(definition: &DeriveInput) -> Vec<Ident> {
+    let mut traits = vec![];
+    for attr in definition.attrs.iter() {
+        match attr.interpret_meta() {
+            Some(Meta::List(MetaList { ident, ref nested, .. })) if ident == "enum_kind_derive" => {
+                if !nested.is_empty() {
+                    for meta in nested.iter() {
+                        if let &NestedMeta::Meta(Meta::Word(ident)) = meta {
+                            traits.push(ident.clone());
+                        } else {
+                            panic!("#[enum_kind_derive(TRAIT, ...)] allows only identifiers as arguments");
+                        }
+                    }
+                } else {
+                    panic!("#[enum_kind_derive(TRAIT, ...)] requires one or more TRAITs to be specified");
+                }
+            },
+            _ => continue
+        }
+    }
+    traits
+}
+
+fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Ident>) -> Tokens {
     let variant_idents = match &definition.data {
         &Data::Enum(DataEnum { ref variants, .. }) => {
             variants.iter().map(|ref v| v.ident.clone())
@@ -89,8 +114,9 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
         }
     };
     let visibility = &definition.vis;
+    let derives = Punctuated::<Ident, syn::token::Comma>::from_iter(traits);
     quote! {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, #derives)]
         #[allow(dead_code)]
         #[allow(non_snake_case)]
         #visibility enum #kind_ident {
