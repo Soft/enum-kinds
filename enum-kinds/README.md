@@ -41,7 +41,7 @@ The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 `SomeEnumKind` that contains matching unit variant for each of the variants in
 `SomeEnum`.
 
-# Additional Traits for Kind Enums
+# Additional Traits for Generated Enums
 
 By default, derived kind enums implement `Debug`, `Clone`, `Copy`, `PartialEq`
 and `Eq` traits. Additional derives can be specified by passing derive specifier

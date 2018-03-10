@@ -1,21 +1,21 @@
 //! Custom derive for generating enums with matching variants but without any of
 //! the data.
-//! 
+//!
 //! In other words, `enum-kinds` automatically generates enums that have the
 //! same set of variants as the original enum, but with all the embedded data
 //! stripped away (that is, all the variants of the newly generated enum are
 //! unit variants). Additionally, `enum-kinds` implements `From` trait for going
 //! from the original enum to the unit variant version.
-//! 
+//!
 //! The crate is compatible with stable Rust releases. This crate replaces
 //! earlier `enum_kinds_macros` and `enum_kinds_traits` crates.
-//! 
+//!
 //! # Example
-//! 
+//!
 //! ```rust,ignore
 //! #[macro_use]
 //! extern crate enum_kinds;
-//! 
+//!
 //! #[derive(EnumKind)]
 //! #[enum_kind(SomeEnumKind)]
 //! enum SomeEnum {
@@ -23,17 +23,46 @@
 //!     Second(char),
 //!     Third
 //! }
-//! 
+//!
 //! #[test]
 //! fn test_enum_kind() {
 //!     let first = SomeEnum::First("Example".to_owned(), 32);
 //!     assert_eq!(SomeEnumKind::from(&first), SomeEnumKind::First);
 //! }
 //! ```
-//! 
-//! The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
-//! `SomeEnumKind` that contains matching unit variant for each of the variants in
-//! `SomeEnum`.
+//!
+//! The `#[derive(EnumKind)]` attribute automatically creates another `enum`
+//! named `SomeEnumKind` that contains matching unit variant for each of the
+//! variants in `SomeEnum`.
+//!
+//! # Additional Traits for Generated Enums
+//!
+//! By default, derived kind enums implement `Debug`, `Clone`, `Copy`,
+//! `PartialEq` and `Eq` traits. Additional derives can be specified by passing
+//! derive specifier to the `enum_kind` attribute: `#[enum_kind(NAME,
+//! derive(TRAIT, ...))]`. For example, to implement [Serde's](https://serde.rs)
+//! Serialize and Deserialize traits:
+//!
+//! ```rust,ignore
+//! #[macro_use]
+//! extern crate enum_kinds;
+//!
+//! #[macro_use]
+//! extern crate serde_derive;
+//! extern crate serde;
+//!
+//! #[derive(EnumKind)]
+//! #[enum_kind(AdditionalDerivesKind, derive(Serialize, Deserialize))]
+//! enum AdditionalDerives {
+//!     Variant(String, u32),
+//!     Another(String)
+//! }
+//! ```
+//!
+//! # no_std support
+//!
+//! `enum-kinds` can be used without the standard library by enabling
+//! `no-stdlib` feature.
 //!
 
 #[macro_use]
