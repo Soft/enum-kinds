@@ -9,7 +9,7 @@ extern crate serde;
 extern crate serde_json;
 
 #[derive(EnumKind)]
-#[enum_kind_name(UnnamedEnumKind)]
+#[enum_kind(UnnamedEnumKind)]
 #[allow(dead_code)]
 enum UnnamedEnum {
     First(String, u32),
@@ -18,7 +18,7 @@ enum UnnamedEnum {
 }
 
 #[derive(EnumKind)]
-#[enum_kind_name(NamedEnumKind)]
+#[enum_kind(NamedEnumKind)]
 #[allow(dead_code)]
 enum NamedEnum {
     Foo {
@@ -31,34 +31,33 @@ enum NamedEnum {
 }
 
 #[derive(EnumKind)]
-#[enum_kind_name(WithLifetimeKind)]
+#[enum_kind(WithLifetimeKind)]
 #[allow(dead_code)]
 enum WithLifetime<'a> {
     First(&'a str)
 }
 
 #[derive(EnumKind)]
-#[enum_kind_name(WithWhereClauseKind)]
+#[enum_kind(WithWhereClauseKind)]
 #[allow(dead_code)]
 enum WithWhereClause<'b, T> where T: Debug, T: 'b, T: ?Sized {
     First { value: &'b T }
 }
 
 #[derive(EnumKind)]
-#[enum_kind_name(WithCollisionKind)]
+#[enum_kind(WithCollisionKind)]
 #[allow(dead_code)]
 enum WithCollision<'__enum_kinds1> {
     First(&'__enum_kinds1 str)
 }
 
 #[derive(EnumKind)]
-#[enum_kind_name(UninhabitedEnumKind)]
+#[enum_kind(UninhabitedEnumKind)]
 #[allow(dead_code)]
 enum UninhabitedEnum {}
 
 #[derive(EnumKind)]
-#[enum_kind_name(WithExtraTraitsKind)]
-#[enum_kind_derive(Serialize, Deserialize)]
+#[enum_kind(WithExtraTraitsKind, derive(Serialize, Deserialize))]
 #[allow(dead_code)]
 enum WithExtraTraits {
     First(u32, u32),

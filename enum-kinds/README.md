@@ -23,7 +23,7 @@ earlier `enum_kinds_macros` and `enum_kinds_traits` crates.
 extern crate enum_kinds;
 
 #[derive(EnumKind)]
-#[enum_kind_name(SomeEnumKind)]
+#[enum_kind(SomeEnumKind)]
 enum SomeEnum {
     First(String, u32),
     Second(char),
@@ -44,9 +44,10 @@ The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 # Additional Traits for Kind Enums
 
 By default, derived kind enums implement `Debug`, `Clone`, `Copy`, `PartialEq`
-and `Eq` traits. Additional derives can be specified using the
-`#[enum_kind_derive(TRAIT, ...)]` attribute. For example, to implement Serde's
-Serialize and Deserialize traits:
+and `Eq` traits. Additional derives can be specified by passing derive specifier
+to the `enum_kind` attribute: `#[enum_kind(NAME, derive(TRAIT, ...))]`. For
+example, to implement [Serde's](https://serde.rs) Serialize and Deserialize
+traits:
 
 ``` rust
 #[macro_use]
@@ -57,8 +58,7 @@ extern crate serde_derive;
 extern crate serde;
 
 #[derive(EnumKind)]
-#[enum_kind_name(AdditionalDerivesKind)]
-#[enum_kind_derive(Serialize, Deserialize)]
+#[enum_kind(AdditionalDerivesKind, derive(Serialize, Deserialize))]
 enum AdditionalDerives {
     Variant(String, u32),
     Another(String)

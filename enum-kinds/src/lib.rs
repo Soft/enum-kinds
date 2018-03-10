@@ -17,7 +17,7 @@
 //! extern crate enum_kinds;
 //! 
 //! #[derive(EnumKind)]
-//! #[enum_kind_name(SomeEnumKind)]
+//! #[enum_kind(SomeEnumKind)]
 //! enum SomeEnum {
 //!     First(String, u32),
 //!     Second(char),
@@ -46,17 +46,15 @@ use proc_macro::TokenStream;
 use quote::Tokens;
 use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum,
           Fields, Path, LifetimeDef, GenericParam, Lifetime};
-use syn::punctuated::{Punctuated, Pair};
+use syn::punctuated::Punctuated;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
-#[proc_macro_derive(EnumKind, attributes(enum_kind_name, enum_kind_derive))]
+#[proc_macro_derive(EnumKind, attributes(enum_kind))]
 pub fn enum_kind(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("#[derive(EnumKind)] failed to parse input");
-    let name = get_enum_name(&ast)
-        .expect("#[derive(EnumKind)] requires an associated #[enum_kind_name(NAME)] to be specified");
-    let derives = get_derives(&ast);
-    let enum_ = create_kind_enum(&ast, &name, derives);
+    let (name, traits) = get_enum_specification(&ast);
+    let enum_ = create_kind_enum(&ast, &name, traits);
     let impl_ = create_impl(&ast, &name);
     let code = quote! {
         #enum_
@@ -65,43 +63,47 @@ pub fn enum_kind(input: TokenStream) -> TokenStream {
     code.into()
 }
 
-fn get_enum_name(definition: &DeriveInput) -> Option<Ident> {
+fn find_attribute(definition: &DeriveInput, name: &str)
+                  -> Option<Punctuated<NestedMeta, syn::token::Comma>> {
     for attr in definition.attrs.iter() {
         match attr.interpret_meta() {
-            Some(Meta::List(MetaList { ident, ref nested, .. })) if ident == "enum_kind_name" => {
-                if let Some(Pair::End(&NestedMeta::Meta(Meta::Word(ident)))) = nested.pairs().next() {
-                    return Some(ident.clone());
-                } else {
-                    panic!("#[enum_kind_name(NAME)] requires an identifier NAME to be specified");
-                }
-            },
+            Some(Meta::List(MetaList { ident, ref nested, .. }))
+                if ident == name => return Some(nested.clone()),
             _ => continue
         }
     }
-    return None;
+    None
 }
 
-fn get_derives(definition: &DeriveInput) -> Vec<Ident> {
-    let mut traits = vec![];
-    for attr in definition.attrs.iter() {
-        match attr.interpret_meta() {
-            Some(Meta::List(MetaList { ident, ref nested, .. })) if ident == "enum_kind_derive" => {
-                if !nested.is_empty() {
-                    for meta in nested.iter() {
-                        if let &NestedMeta::Meta(Meta::Word(ident)) = meta {
-                            traits.push(ident.clone());
-                        } else {
-                            panic!("#[enum_kind_derive(TRAIT, ...)] allows only identifiers as arguments");
-                        }
+fn get_enum_specification(definition: &DeriveInput) -> (Ident, Vec<Ident>) {
+    let params = find_attribute(definition, "enum_kind")
+        .expect("#[derive(EnumKind)] requires an associated enum_kind attribute to be specified");
+    let mut iter = params.iter();
+    if let Some(&NestedMeta::Meta(Meta::Word(ident))) = iter.next() {
+        let name = ident;
+        match iter.next() {
+            Some(&NestedMeta::Meta(Meta::List(MetaList { ident, ref nested, .. })))
+                if ident == "derive" => {
+                let mut to_derive = vec![];
+                for meta in nested.iter() {
+                    if let &NestedMeta::Meta(Meta::Word(ident)) = meta {
+                        to_derive.push(ident.clone());
+                    } else {
+                        panic!("#[enum_kind({}, derive(...))] attribute's derive specifier accepts only identifiers");
                     }
-                } else {
-                    panic!("#[enum_kind_derive(TRAIT, ...)] requires one or more TRAITs to be specified");
                 }
+                return (name, to_derive);
             },
-            _ => continue
+            Some(_) => {
+                panic!("#[enum_kind({}, ...)] attribute has unknown extra specifiers", name);
+            }
+            None => {
+                return (name, vec![]);
+            }
         }
+    } else {
+        panic!("#[enum_kind(NAME)] attribute requires NAME to be specified");
     }
-    traits
 }
 
 fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Ident>) -> Tokens {
