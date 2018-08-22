@@ -150,6 +150,7 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Id
         #[derive(Debug, Clone, Copy, PartialEq, Eq, #derives)]
         #[allow(dead_code)]
         #[allow(non_snake_case)]
+        #[allow(missing_docs)]
         #visibility enum #kind_ident {
             #(#variant_idents),*
         }
@@ -228,6 +229,7 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
     quote! {
         #[automatically_derived]
         #[allow(unused_attributes)]
+        #[allow(missing_docs)]
         impl #impl_generics #trait_<&#a #ident#ty_generics> for #kind_ident #where_clause {
             fn from(_value: &#a #ident#ty_generics) -> Self {
                 #impl_
@@ -236,6 +238,7 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
 
         #[automatically_derived]
         #[allow(unused_attributes)]
+        #[allow(missing_docs)]
         impl #impl_generics #trait_<#ident#ty_generics> for #kind_ident #where_clause {
             fn from(value: #ident#ty_generics) -> Self {
                 #kind_ident::from(&value)
