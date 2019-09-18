@@ -104,38 +104,18 @@ fn find_attribute(definition: &DeriveInput, name: &str)
     None
 }
 
-fn get_enum_specification(definition: &DeriveInput) -> (Path, Vec<Path>) {
+fn get_enum_specification(definition: &DeriveInput) -> (Path, Vec<NestedMeta>) {
     let params = find_attribute(definition, "enum_kind")
         .expect("#[derive(EnumKind)] requires an associated enum_kind attribute to be specified");
     let mut iter = params.iter();
     if let Some(&NestedMeta::Meta(Meta::Path(ref path))) = iter.next() {
-        let name = path;
-        match iter.next() {
-            Some(&NestedMeta::Meta(Meta::List(MetaList { ref path, ref nested, .. })))
-                if path.is_ident("derive") => {
-                let mut to_derive = vec![];
-                for meta in nested.iter() {
-                    if let &NestedMeta::Meta(Meta::Path(ref ident)) = meta {
-                        to_derive.push(ident.clone());
-                    } else {
-                        panic!("#[enum_kind(NAME, derive(...))] attribute's derive specifier accepts only identifiers");
-                    }
-                }
-                return (name.to_owned(), to_derive);
-            },
-            Some(_) => {
-                panic!("#[enum_kind(NAME, ...)] attribute has unknown extra arguments")
-            }
-            None => {
-                return (name.to_owned(), vec![]);
-            }
-        }
+        return (path.to_owned(), iter.cloned().collect());
     } else {
         panic!("#[enum_kind(NAME)] attribute requires NAME to be specified");
     }
 }
 
-fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<Path>) -> TokenStream {
+fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<NestedMeta>) -> TokenStream {
     let variant_idents = match &definition.data {
         &Data::Enum(DataEnum { ref variants, .. }) => {
             variants.iter().map(|ref v| v.ident.clone())
@@ -145,12 +125,12 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<Pat
         }
     };
     let visibility = &definition.vis;
-    let derives = Punctuated::<Path, syn::token::Comma>::from_iter(traits);
     let code = quote! {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, #derives)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         #[allow(dead_code)]
         #[allow(non_snake_case)]
         #[allow(missing_docs)]
+        #( #[#traits] )*
         #visibility enum #kind_ident {
             #(#variant_idents),*
         }
