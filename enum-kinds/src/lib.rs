@@ -65,22 +65,22 @@
 //! `no-stdlib` feature.
 //!
 
-#[macro_use]
 extern crate quote;
 extern crate proc_macro;
+extern crate proc_macro2;
 #[macro_use]
 extern crate syn;
 
-use proc_macro::TokenStream;
-use quote::Tokens;
-use syn::{DeriveInput, Meta, NestedMeta, Ident, Data, MetaList, DataEnum,
+use proc_macro2::TokenStream;
+use quote::quote;
+use syn::{DeriveInput, Meta, NestedMeta, Data, MetaList, DataEnum,
           Fields, Path, LifetimeDef, GenericParam, Lifetime};
 use syn::punctuated::Punctuated;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind))]
-pub fn enum_kind(input: TokenStream) -> TokenStream {
+pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse(input).expect("#[derive(EnumKind)] failed to parse input");
     let (name, traits) = get_enum_specification(&ast);
     let enum_ = create_kind_enum(&ast, &name, traits);
@@ -89,45 +89,45 @@ pub fn enum_kind(input: TokenStream) -> TokenStream {
         #enum_
         #impl_
     };
-    code.into()
+    proc_macro::TokenStream::from(code)
 }
 
 fn find_attribute(definition: &DeriveInput, name: &str)
                   -> Option<Punctuated<NestedMeta, syn::token::Comma>> {
     for attr in definition.attrs.iter() {
-        match attr.interpret_meta() {
-            Some(Meta::List(MetaList { ident, ref nested, .. }))
-                if ident == name => return Some(nested.clone()),
+        match attr.parse_meta() {
+            Ok(Meta::List(MetaList { ref path, ref nested, .. }))
+                if path.is_ident(name) => return Some(nested.clone()),
             _ => continue
         }
     }
     None
 }
 
-fn get_enum_specification(definition: &DeriveInput) -> (Ident, Vec<Ident>) {
+fn get_enum_specification(definition: &DeriveInput) -> (Path, Vec<Path>) {
     let params = find_attribute(definition, "enum_kind")
         .expect("#[derive(EnumKind)] requires an associated enum_kind attribute to be specified");
     let mut iter = params.iter();
-    if let Some(&NestedMeta::Meta(Meta::Word(ident))) = iter.next() {
-        let name = ident;
+    if let Some(&NestedMeta::Meta(Meta::Path(ref path))) = iter.next() {
+        let name = path;
         match iter.next() {
-            Some(&NestedMeta::Meta(Meta::List(MetaList { ident, ref nested, .. })))
-                if ident == "derive" => {
+            Some(&NestedMeta::Meta(Meta::List(MetaList { ref path, ref nested, .. })))
+                if path.is_ident("derive") => {
                 let mut to_derive = vec![];
                 for meta in nested.iter() {
-                    if let &NestedMeta::Meta(Meta::Word(ident)) = meta {
+                    if let &NestedMeta::Meta(Meta::Path(ref ident)) = meta {
                         to_derive.push(ident.clone());
                     } else {
-                        panic!("#[enum_kind({}, derive(...))] attribute's derive specifier accepts only identifiers");
+                        panic!("#[enum_kind(NAME, derive(...))] attribute's derive specifier accepts only identifiers");
                     }
                 }
-                return (name, to_derive);
+                return (name.to_owned(), to_derive);
             },
             Some(_) => {
-                panic!("#[enum_kind({}, ...)] attribute has unknown extra specifiers", name);
+                panic!("#[enum_kind(NAME, ...)] attribute has unknown extra arguments")
             }
             None => {
-                return (name, vec![]);
+                return (name.to_owned(), vec![]);
             }
         }
     } else {
@@ -135,7 +135,7 @@ fn get_enum_specification(definition: &DeriveInput) -> (Ident, Vec<Ident>) {
     }
 }
 
-fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Ident>) -> Tokens {
+fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<Path>) -> TokenStream {
     let variant_idents = match &definition.data {
         &Data::Enum(DataEnum { ref variants, .. }) => {
             variants.iter().map(|ref v| v.ident.clone())
@@ -145,8 +145,8 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Id
         }
     };
     let visibility = &definition.vis;
-    let derives = Punctuated::<Ident, syn::token::Comma>::from_iter(traits);
-    quote! {
+    let derives = Punctuated::<Path, syn::token::Comma>::from_iter(traits);
+    let code = quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, #derives)]
         #[allow(dead_code)]
         #[allow(non_snake_case)]
@@ -154,7 +154,8 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Ident, traits: Vec<Id
         #visibility enum #kind_ident {
             #(#variant_idents),*
         }
-    }
+    };
+    TokenStream::from(code)
 }
 
 fn is_uninhabited_enum(definition: &DeriveInput) -> bool {
@@ -164,7 +165,7 @@ fn is_uninhabited_enum(definition: &DeriveInput) -> bool {
     return false;
 }
 
-fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
+fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
     let (_, ty_generics, where_clause) = definition.generics.split_for_impl();
     let ident = &definition.ident;
 
@@ -226,7 +227,7 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
         }
     };
 
-    quote! {
+    let tokens = quote! {
         #[automatically_derived]
         #[allow(unused_attributes)]
         #[allow(missing_docs)]
@@ -244,6 +245,7 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Ident) -> Tokens {
                 #kind_ident::from(&value)
             }
         }
-    }
+    };
+    TokenStream::from(tokens)
 }
 
