@@ -77,7 +77,6 @@ use syn::{DeriveInput, Meta, NestedMeta, Data, MetaList, DataEnum,
           Fields, Path, LifetimeDef, GenericParam, Lifetime};
 use syn::punctuated::Punctuated;
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind))]
 pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
