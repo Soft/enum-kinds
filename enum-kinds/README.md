@@ -41,13 +41,13 @@ The `#[derive(EnumKind)]` attribute automatically creates another `enum` named
 `SomeEnumKind` that contains matching unit variant for each of the variants in
 `SomeEnum`.
 
-# Additional Traits for Generated Enums
+# Additional Attributes for Generated Enums
 
 By default, derived kind enums implement `Debug`, `Clone`, `Copy`, `PartialEq`
-and `Eq` traits. Additional derives can be specified by passing derive specifier
-to the `enum_kind` attribute: `#[enum_kind(NAME, derive(TRAIT, ...))]`. For
-example, to implement [Serde's](https://serde.rs) Serialize and Deserialize
-traits:
+and `Eq` traits. Additional attributes can be attached to the generated `enum`
+by including them to the `enum_kind` attribute: `#[enum_kind(NAME,
+derive(SomeTrait), derive(AnotherTrait))]`. For example, to implement
+[Serde's](https://serde.rs) Serialize and Deserialize traits:
 
 ``` rust
 #[macro_use]
@@ -74,7 +74,7 @@ feature.
 
 While the enum-kinds is fairly simple, issues are still possible. If you
 encounter any problems using the crate, please report them at [the issue
-tracker](https://bitbucket.org/Soft/enum-kinds/issues).
+tracker](https://github.com/Soft/enum-kinds/issues).
 
 # License
 

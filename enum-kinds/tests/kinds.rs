@@ -64,6 +64,14 @@ enum WithExtraTraits {
     Second(String)
 }
 
+#[derive(EnumKind)]
+#[enum_kind(WithExtraTraitsMultipleKind, derive(Serialize), derive(Deserialize))]
+#[allow(dead_code)]
+enum WithExtraTraitsMultiple {
+    First(u32, u32),
+    Second(String)
+}
+
 #[test]
 fn test_unnamed() {
     let first = UnnamedEnum::First("Example".to_owned(), 32);
@@ -105,5 +113,14 @@ fn test_with_extra_traits() {
     let kind: WithExtraTraitsKind = first.into();
     serde_json::to_string(&kind).unwrap();
 }
+
+#[test]
+fn test_with_extra_traits_multiple() {
+    let first = WithExtraTraitsMultiple::First(20, 30);
+    let kind: WithExtraTraitsMultipleKind = first.into();
+    serde_json::to_string(&kind).unwrap();
+}
+
+
 
 
