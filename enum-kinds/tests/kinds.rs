@@ -72,6 +72,18 @@ enum WithExtraTraitsMultiple {
     Second(String)
 }
 
+mod forbids_missing_docs {
+    #![forbid(missing_docs)]
+
+    #[derive(EnumKind)]
+    #[enum_kind(WithDocumentationKind, doc = "a documented kind enum")]
+    #[allow(dead_code)]
+    enum WithDocumentation {
+        First(u32, u32),
+        Second(String),
+    }
+}
+
 #[test]
 fn test_unnamed() {
     let first = UnnamedEnum::First("Example".to_owned(), 32);
