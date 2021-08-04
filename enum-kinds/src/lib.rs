@@ -73,10 +73,12 @@ extern crate syn;
 
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, Meta, NestedMeta, Data, MetaList, DataEnum,
-          Fields, Path, LifetimeDef, GenericParam, Lifetime};
-use syn::punctuated::Punctuated;
 use std::collections::HashSet;
+use syn::punctuated::Punctuated;
+use syn::{
+    Data, DataEnum, DeriveInput, Fields, GenericParam, Lifetime, LifetimeDef, Meta, MetaList,
+    MetaNameValue, NestedMeta, Path,
+};
 
 #[proc_macro_derive(EnumKind, attributes(enum_kind))]
 pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -114,6 +116,16 @@ fn get_enum_specification(definition: &DeriveInput) -> (Path, Vec<NestedMeta>) {
     }
 }
 
+fn has_docs(traits: &[NestedMeta]) -> bool {
+    traits.iter().any(|attr| {
+        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, .. })) = attr {
+            path.is_ident("doc")
+        } else {
+            false
+        }
+    })
+}
+
 fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<NestedMeta>) -> TokenStream {
     let variant_idents = match &definition.data {
         &Data::Enum(DataEnum { ref variants, .. }) => {
@@ -124,11 +136,15 @@ fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<Nes
         }
     };
     let visibility = &definition.vis;
+        let docs_attr = if !has_docs(traits.as_ref()) {
+        quote! {#[allow(missing_docs)]}
+    } else {
+        quote! {}
+    };
     let code = quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         #[allow(dead_code)]
-        #[allow(non_snake_case)]
-        #[allow(missing_docs)]
+        #docs_attr
         #( #[#traits] )*
         #visibility enum #kind_ident {
             #(#variant_idents),*
@@ -209,7 +225,6 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
     let tokens = quote! {
         #[automatically_derived]
         #[allow(unused_attributes)]
-        #[allow(missing_docs)]
         impl #impl_generics #trait_<&#a #ident#ty_generics> for #kind_ident #where_clause {
             fn from(_value: &#a #ident#ty_generics) -> Self {
                 #impl_
@@ -218,7 +233,6 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
 
         #[automatically_derived]
         #[allow(unused_attributes)]
-        #[allow(missing_docs)]
         impl #impl_generics #trait_<#ident#ty_generics> for #kind_ident #where_clause {
             fn from(value: #ident#ty_generics) -> Self {
                 #kind_ident::from(&value)
