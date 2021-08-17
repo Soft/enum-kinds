@@ -7,18 +7,18 @@
 Custom derive for generating enums with matching variants but without any of
 the data.
 
-In other words, `enum-kinds` automatically generates enums that have the
-same set of variants as the original enum, but with all the embedded data
-stripped away (that is, all the variants of the newly generated enum are
-unit variants). Additionally, `enum-kinds` implements `From` trait for going
-from the original enum to the unit variant version.
+In other words, `enum-kinds` automatically generates enums that have the same
+set of variants as the original enum, but with all the embedded data stripped
+away (that is, all the variants of the newly-generated enum are unit variants).
+Additionally, `enum-kinds` implements `From` trait for going from the original
+enum to the unit variant version.
 
 The crate is compatible with stable Rust releases. This crate replaces
 earlier `enum_kinds_macros` and `enum_kinds_traits` crates.
 
 # Example
 
-```rust
+```rust,ignore
 #[macro_use]
 extern crate enum_kinds;
 
@@ -49,7 +49,7 @@ by including them to the `enum_kind` attribute: `#[enum_kind(NAME,
 derive(SomeTrait), derive(AnotherTrait))]`. For example, to implement
 [Serde's](https://serde.rs) Serialize and Deserialize traits:
 
-``` rust
+``` rust,ignore
 #[macro_use]
 extern crate enum_kinds;
 
@@ -72,8 +72,7 @@ feature.
 
 # Issues
 
-While the enum-kinds is fairly simple, issues are still possible. If you
-encounter any problems using the crate, please report them at [the issue
+If you encounter any problems using the crate, please report them at [the issue
 tracker](https://github.com/Soft/enum-kinds/issues).
 
 # License
