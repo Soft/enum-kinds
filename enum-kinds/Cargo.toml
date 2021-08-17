@@ -1,6 +1,6 @@
 [package]
 name = "enum-kinds"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Samuel Laurén <samuel.lauren@iki.fi>"]
 homepage = "https://github.com/Soft/enum-kinds"
 repository = "https://github.com/Soft/enum-kinds"
@@ -14,14 +14,14 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-syn = "1.0.5"
-quote = "1.0.2"
-proc-macro2 = "1.0.3"
+syn = "1.0.74"
+quote = "1.0.9"
+proc-macro2 = "1.0.28"
 
 [dev-dependencies]
-serde = "1.0.27"
-serde_derive = "1.0.27"
-serde_json = "1.0.10"
+serde = "1.0.127"
+serde_derive = "1.0.127"
+serde_json = "1.0.66"
 
 [features]
 default = []

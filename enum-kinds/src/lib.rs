@@ -65,9 +65,9 @@
 //! `no-stdlib` feature.
 //!
 
-extern crate quote;
 extern crate proc_macro;
 extern crate proc_macro2;
+extern crate quote;
 #[macro_use]
 extern crate syn;
 
@@ -93,13 +93,18 @@ pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     proc_macro::TokenStream::from(code)
 }
 
-fn find_attribute(definition: &DeriveInput, name: &str)
-                  -> Option<Punctuated<NestedMeta, syn::token::Comma>> {
+fn find_attribute(
+    definition: &DeriveInput,
+    name: &str,
+) -> Option<Punctuated<NestedMeta, syn::token::Comma>> {
     for attr in definition.attrs.iter() {
         match attr.parse_meta() {
-            Ok(Meta::List(MetaList { ref path, ref nested, .. }))
-                if path.is_ident(name) => return Some(nested.clone()),
-            _ => continue
+            Ok(Meta::List(MetaList {
+                ref path,
+                ref nested,
+                ..
+            })) if path.is_ident(name) => return Some(nested.clone()),
+            _ => continue,
         }
     }
     None
@@ -126,17 +131,19 @@ fn has_docs(traits: &[NestedMeta]) -> bool {
     })
 }
 
-fn create_kind_enum(definition: &DeriveInput, kind_ident: &Path, traits: Vec<NestedMeta>) -> TokenStream {
+fn create_kind_enum(
+    definition: &DeriveInput,
+    kind_ident: &Path,
+    traits: Vec<NestedMeta>,
+) -> TokenStream {
     let variant_idents = match &definition.data {
-        &Data::Enum(DataEnum { ref variants, .. }) => {
-            variants.iter().map(|ref v| v.ident.clone())
-        }
+        &Data::Enum(DataEnum { ref variants, .. }) => variants.iter().map(|ref v| v.ident.clone()),
         _ => {
             panic!("#[derive(EnumKind)] is only allowed for enums");
         }
     };
     let visibility = &definition.vis;
-        let docs_attr = if !has_docs(traits.as_ref()) {
+    let docs_attr = if !has_docs(traits.as_ref()) {
         quote! {#[allow(missing_docs)]}
     } else {
         quote! {}
@@ -165,41 +172,39 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
     let ident = &definition.ident;
 
     let arms = match &definition.data {
-        &Data::Enum(DataEnum { ref variants, .. }) => {
-            variants.iter().map(|ref v| {
-                let variant = &v.ident;
-                match v.fields {
-                    Fields::Unit => quote! {
-                        &#ident::#variant => #kind_ident::#variant,
-                    },
-                    Fields::Unnamed(_) => quote! {
-                        &#ident::#variant(..) => #kind_ident::#variant,
-                    },
-                    Fields::Named(_) => quote! {
-                        &#ident::#variant{..} => #kind_ident::#variant,
-                    }
-                }
-            })
-        }
+        &Data::Enum(DataEnum { ref variants, .. }) => variants.iter().map(|ref v| {
+            let variant = &v.ident;
+            match v.fields {
+                Fields::Unit => quote! {
+                    &#ident::#variant => #kind_ident::#variant,
+                },
+                Fields::Unnamed(_) => quote! {
+                    &#ident::#variant(..) => #kind_ident::#variant,
+                },
+                Fields::Named(_) => quote! {
+                    &#ident::#variant{..} => #kind_ident::#variant,
+                },
+            }
+        }),
         _ => {
             panic!("#[derive(EnumKind)] is only allowed for enums");
         }
     };
 
-    let trait_: Path = if cfg!(feature="no-stdlib") {
+    let trait_: Path = if cfg!(feature = "no-stdlib") {
         parse_quote!(::core::convert::From)
     } else {
         parse_quote!(::std::convert::From)
     };
 
     let mut counter: u32 = 1;
-    let used: HashSet<Lifetime> = definition.generics
+    let used: HashSet<Lifetime> = definition
+        .generics
         .lifetimes()
         .map(|ld| ld.lifetime.clone())
         .collect();
     let a = loop {
-        let lifetime: Lifetime = syn::parse_str(&format!("'__enum_kinds{}", counter))
-            .unwrap();
+        let lifetime: Lifetime = syn::parse_str(&format!("'__enum_kinds{}", counter)).unwrap();
         if !used.contains(&lifetime) {
             break LifetimeDef::new(lifetime);
         }
@@ -215,7 +220,7 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
             unreachable!();
         }
     } else {
-        quote!{
+        quote! {
             match _value {
                 #(#arms)*
             }
@@ -241,4 +246,3 @@ fn create_impl(definition: &DeriveInput, kind_ident: &Path) -> TokenStream {
     };
     TokenStream::from(tokens)
 }
-

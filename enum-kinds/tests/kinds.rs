@@ -14,41 +14,41 @@ extern crate serde_json;
 enum UnnamedEnum {
     First(String, u32),
     Second(char),
-    Third
+    Third,
 }
 
 #[derive(EnumKind)]
 #[enum_kind(NamedEnumKind)]
 #[allow(dead_code)]
 enum NamedEnum {
-    Foo {
-        foo: String,
-        bar: u32
-    },
-    Bar {
-        zap: char
-    }
+    Foo { foo: String, bar: u32 },
+    Bar { zap: char },
 }
 
 #[derive(EnumKind)]
 #[enum_kind(WithLifetimeKind)]
 #[allow(dead_code)]
 enum WithLifetime<'a> {
-    First(&'a str)
+    First(&'a str),
 }
 
 #[derive(EnumKind)]
 #[enum_kind(WithWhereClauseKind)]
 #[allow(dead_code)]
-enum WithWhereClause<'b, T> where T: Debug, T: 'b, T: ?Sized {
-    First { value: &'b T }
+enum WithWhereClause<'b, T>
+where
+    T: Debug,
+    T: 'b,
+    T: ?Sized,
+{
+    First { value: &'b T },
 }
 
 #[derive(EnumKind)]
 #[enum_kind(WithCollisionKind)]
 #[allow(dead_code)]
 enum WithCollision<'__enum_kinds1> {
-    First(&'__enum_kinds1 str)
+    First(&'__enum_kinds1 str),
 }
 
 #[derive(EnumKind)]
@@ -61,7 +61,7 @@ enum UninhabitedEnum {}
 #[allow(dead_code)]
 enum WithExtraTraits {
     First(u32, u32),
-    Second(String)
+    Second(String),
 }
 
 #[derive(EnumKind)]
@@ -69,7 +69,7 @@ enum WithExtraTraits {
 #[allow(dead_code)]
 enum WithExtraTraitsMultiple {
     First(u32, u32),
-    Second(String)
+    Second(String),
 }
 
 mod forbids_missing_docs {
@@ -94,7 +94,7 @@ fn test_unnamed() {
 fn test_named() {
     let foo = NamedEnum::Foo {
         foo: "Example".to_owned(),
-        bar: 32
+        bar: 32,
     };
     assert_eq!(NamedEnumKind::from(&foo), NamedEnumKind::Foo);
 }
@@ -107,10 +107,11 @@ fn test_with_lifetimes() {
 
 #[test]
 fn test_with_where_clause() {
-    let first = WithWhereClause::First {
-        value: "hello"
-    };
-    assert_eq!(WithWhereClauseKind::from(&first), WithWhereClauseKind::First);
+    let first = WithWhereClause::First { value: "hello" };
+    assert_eq!(
+        WithWhereClauseKind::from(&first),
+        WithWhereClauseKind::First
+    );
 }
 
 #[test]
@@ -132,7 +133,3 @@ fn test_with_extra_traits_multiple() {
     let kind: WithExtraTraitsMultipleKind = first.into();
     serde_json::to_string(&kind).unwrap();
 }
-
-
-
-
