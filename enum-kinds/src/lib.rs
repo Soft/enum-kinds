@@ -11,11 +11,11 @@ use quote::quote;
 use std::collections::HashSet;
 use syn::punctuated::Punctuated;
 use syn::{
-    Data, DataEnum, DeriveInput, Fields, GenericParam, Lifetime, LifetimeDef, Meta, MetaList,
-    MetaNameValue, NestedMeta, Path,
+    Attribute, Data, DataEnum, DeriveInput, Fields, GenericParam, Lifetime, LifetimeDef, Meta,
+    MetaList, MetaNameValue, NestedMeta, Path,
 };
 
-#[proc_macro_derive(EnumKind, attributes(enum_kind))]
+#[proc_macro_derive(EnumKind, attributes(enum_kind, enum_kind_value))]
 pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast = syn::parse(input).expect("#[derive(EnumKind)] failed to parse input");
     let (name, traits) = get_enum_specification(&ast);
@@ -29,10 +29,10 @@ pub fn enum_kind(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 fn find_attribute(
-    definition: &DeriveInput,
+    attrs: &[Attribute],
     name: &str,
 ) -> Option<Punctuated<NestedMeta, syn::token::Comma>> {
-    for attr in definition.attrs.iter() {
+    for attr in attrs.iter() {
         match attr.parse_meta() {
             Ok(Meta::List(MetaList {
                 ref path,
@@ -46,7 +46,7 @@ fn find_attribute(
 }
 
 fn get_enum_specification(definition: &DeriveInput) -> (Path, Vec<NestedMeta>) {
-    let params = find_attribute(definition, "enum_kind")
+    let params = find_attribute(&definition.attrs, "enum_kind")
         .expect("#[derive(EnumKind)] requires an associated enum_kind attribute to be specified");
     let mut iter = params.iter();
     if let Some(&NestedMeta::Meta(Meta::Path(ref path))) = iter.next() {
@@ -71,12 +71,19 @@ fn create_kind_enum(
     kind_ident: &Path,
     traits: Vec<NestedMeta>,
 ) -> TokenStream {
-    let variant_idents = match &definition.data {
-        &Data::Enum(DataEnum { ref variants, .. }) => variants.iter().map(|ref v| v.ident.clone()),
+    let variants = match &definition.data {
+        &Data::Enum(DataEnum { ref variants, .. }) => variants,
         _ => {
             panic!("#[derive(EnumKind)] is only allowed for enums");
         }
     };
+    let variant_defs = variants.iter().map(|ref v| {
+        let ident = v.ident.clone();
+        match find_attribute(&v.attrs, "enum_kind_value") {
+            Some(params) => quote! {#ident = #params},
+            None => quote! {#ident},
+        }
+    });
     let visibility = &definition.vis;
     let docs_attr = if !has_docs(traits.as_ref()) {
         quote! {#[allow(missing_docs)]}
@@ -89,7 +96,7 @@ fn create_kind_enum(
         #docs_attr
         #( #[#traits] )*
         #visibility enum #kind_ident {
-            #(#variant_idents),*
+            #(#variant_defs),*
         }
     };
     TokenStream::from(code)

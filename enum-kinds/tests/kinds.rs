@@ -72,6 +72,17 @@ enum WithExtraTraitsMultiple {
     Second(String),
 }
 
+#[derive(EnumKind)]
+#[enum_kind(WithValuesKind)]
+#[allow(dead_code)]
+enum WithValues {
+    #[enum_kind_value(10)]
+    Ten,
+    #[enum_kind_value(20)]
+    Twenty,
+    TwentyOne,
+}
+
 mod forbids_missing_docs {
     #![forbid(missing_docs)]
 
@@ -132,4 +143,11 @@ fn test_with_extra_traits_multiple() {
     let first = WithExtraTraitsMultiple::First(20, 30);
     let kind: WithExtraTraitsMultipleKind = first.into();
     serde_json::to_string(&kind).unwrap();
+}
+
+#[test]
+fn test_with_values() {
+    let twentyone = WithValues::TwentyOne;
+    let kind: WithValuesKind = twentyone.into();
+    assert_eq!(kind as usize, 21);
 }
