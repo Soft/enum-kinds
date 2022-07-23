@@ -65,6 +65,26 @@ enum AdditionalDerives {
 }
 ```
 
+# Custom Discriminant Values
+
+By default, derived kind enums do not specify values for the variants. To
+specify values, use the `enum_kind_value` attribute: `#[enum_kind_value(10)]`.
+For example,
+
+``` rust,ignore
+#[macro_use]
+extern crate enum_kinds;
+
+#[derive(EnumKind)]
+#[enum_kind(WithValuesKind)]
+enum WithValues {
+    #[enum_kind_value(10)]
+    Ten(String, u32),
+    #[enum_kind_value(20)]
+    Twenty(String)
+}
+```
+
 # no_std support
 
 `enum-kinds` can be used without the standard library by enabling `no-stdlib`
